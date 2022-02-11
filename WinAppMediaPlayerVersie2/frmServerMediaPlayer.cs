@@ -11,11 +11,18 @@ using System.Windows.Forms;
 using System.IO;
 //extra voor afspelen muziek na import mediaplayer in toolbox
 using WMPLib;
+using System.Net.Sockets; //TCPClient en TCPServer verbinden
+using System.Net; //IPadressen gebruiken
+
 
 namespace WinAppMediaPlayerVersie2
 {
     public partial class frmServerMediaPlayer : Form
     {
+        TcpListener listener; //wachten op client
+        TcpClient client; //verbinden met Client
+        StreamReader Reader; //berichten ontvangen
+        StreamWriter Writer; //berichten versturen
         public frmServerMediaPlayer()
         {
             InitializeComponent();
@@ -98,11 +105,74 @@ namespace WinAppMediaPlayerVersie2
             }
         }
 
+        private void chkbStartStopServer_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkbStartStopServer.Checked)//knop is ingedrukt
+            {
+                //controle IP-adres
+                IPAddress ipadres;
+                int poortNr;
+                if (!IPAddress.TryParse(mtxtIPadres.Text.Replace("", ""), out ipadres))
+                {
+                    txtMelding.AppendText("Ongeldig IP-Adres!\r\n");
+                    mtxtIPadres.Focus();
+                    return;
+                }
+                if (!int.TryParse(mtxtPoortnr.Text, out poortNr))
+                {
+                    txtMelding.AppendText("ongeldig poortnummer!\r\n");
+                    mtxtPoortnr.Focus();
+                    return;
+                }
+                //listener opzetten
+                try
+                {
+                    listener = new TcpListener(ipadres, poortNr);
+                    listener.Start();
+                    //backgroundworker starten
+                    bgWorkerListener.WorkerSupportsCancellation = true;
+                    bgWorkerListener.RunWorkerAsync();
+                    txtMelding.AppendText("Server opgestart\r\n");
+                    chkbStartStopServer.Text = "Stop Server";
+                    tssTCPServer.Text = "TCP/IP sever gestart";
+                    tssTCPServer.ForeColor = Color.Green;
+                }
+                catch (Exception)
+                {
+                    txtMelding.AppendText("Kan geen verbinding maken!\r\n");
+                }
+            }
+            else //server stoppen
+            {
+                if (client != null && client.Connected)
+                {
+                    //eerst client stopbericht sturen
+                    Writer.WriteLine("Disconnect");
+                    bgWorkerOntvang.CancelAsync();
+                }
+                try //sever stoppen
+                {
+                    if (listener != null)
+                    {
+                        if (client != null && client.Connected) client.Close();
+                        listener.Stop();
+                    }
+                    chkbStartStopServer.Text = "Start Server";
+                    txtMelding.AppendText("Server gestopt!\r\n");
+                }
+                catch
+                {
+                    txtMelding.AppendText("Server kan niet gestopt worden.\r\n");
+                }
+            }
+        }
+
         private void btnStartPlay_Click(object sender, EventArgs e)
         {
             Player.controls.play();
             tssMediaPlayer.Text = "Mediaplayer speelt af";
             tssMediaPlayer.ForeColor = Color.Green;
-        }       
+        }  
+        
     }
 }
