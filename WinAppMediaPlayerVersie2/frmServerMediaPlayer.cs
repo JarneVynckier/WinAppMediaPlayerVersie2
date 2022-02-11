@@ -35,8 +35,11 @@ namespace WinAppMediaPlayerVersie2
             }
             foreach (string file in Directory.GetFiles(pad))
             {
-                // voeg toe aan resultaat               
-                lstAlleSongs.Items.Add(Path.GetFileNameWithoutExtension(file));
+                // voeg toe aan resultaat
+                if(file.Contains(".mp3"))
+                {
+                    lstAlleSongs.Items.Add(Path.GetFileNameWithoutExtension(file));
+                }               
             }
             //afspeellijst aanmaken
             Player.currentPlaylist = Player.newPlaylist("Klas", "");
@@ -68,6 +71,8 @@ namespace WinAppMediaPlayerVersie2
         private void btnStopPlay_Click(object sender, EventArgs e)
         {
             Player.controls.stop();
+            tssMediaPlayer.Text = "Mediaplayer gestopt";
+            tssMediaPlayer.ForeColor = Color.Red;
         }
 
         private void btnVoegToePlayList_Click(object sender, EventArgs e)
@@ -86,11 +91,18 @@ namespace WinAppMediaPlayerVersie2
             //verwijderen uit Playlist
             IWMPMedia listItem = Player.currentPlaylist.get_Item(selectie);
             Player.currentPlaylist.removeItem(listItem);
+            if(lstPlaylistSongs.Items.Count==0)
+            {
+                tssMediaPlayer.Text = "Mediaplayer gestopt";
+                tssMediaPlayer.ForeColor = Color.Red;
+            }
         }
 
         private void btnStartPlay_Click(object sender, EventArgs e)
         {
             Player.controls.play();
+            tssMediaPlayer.Text = "Mediaplayer speelt af";
+            tssMediaPlayer.ForeColor = Color.Green;
         }       
     }
 }
