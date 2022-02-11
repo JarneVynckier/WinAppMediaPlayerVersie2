@@ -251,6 +251,7 @@ namespace WinAppMediaPlayerVersie2
             this.btnZend.TabIndex = 27;
             this.btnZend.Text = "Zend bericht naar naar Client";
             this.btnZend.UseVisualStyleBackColor = true;
+            this.btnZend.Click += new System.EventHandler(this.btnZend_Click);
             // 
             // label6
             // 
@@ -347,6 +348,7 @@ namespace WinAppMediaPlayerVersie2
             this.btnVerbreek.TabIndex = 3;
             this.btnVerbreek.Text = "Verbreek verbinding met de Client";
             this.btnVerbreek.UseVisualStyleBackColor = true;
+            this.btnVerbreek.Click += new System.EventHandler(this.btnVerbreek_Click);
             // 
             // tabMediaPlayer
             // 
@@ -550,6 +552,16 @@ namespace WinAppMediaPlayerVersie2
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(762, 569);
             this.tabControl1.TabIndex = 1;
+            // 
+            // bgWorkerListener
+            // 
+            this.bgWorkerListener.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorkerListener_DoWork);
+            this.bgWorkerListener.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorkerListener_RunWorkerCompleted);
+            // 
+            // bgWorkerOntvang
+            // 
+            this.bgWorkerOntvang.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorkerOntvang_DoWork);
+            this.bgWorkerOntvang.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorkerOntvang_RunWorkerCompleted);
             // 
             // frmServerMediaPlayer
             // 

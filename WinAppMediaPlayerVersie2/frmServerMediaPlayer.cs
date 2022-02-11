@@ -112,7 +112,7 @@ namespace WinAppMediaPlayerVersie2
                 //controle IP-adres
                 IPAddress ipadres;
                 int poortNr;
-                if (!IPAddress.TryParse(mtxtIPadres.Text.Replace("", ""), out ipadres))
+                if (!IPAddress.TryParse(mtxtIPadres.Text.Replace(" ", ""), out ipadres))
                 {
                     txtMelding.AppendText("Ongeldig IP-Adres!\r\n");
                     mtxtIPadres.Focus();
@@ -139,7 +139,8 @@ namespace WinAppMediaPlayerVersie2
                 }
                 catch (Exception)
                 {
-                    txtMelding.AppendText("Kan geen verbinding maken!\r\n");
+                    txtMelding.AppendText("Server kan niet gestart worden, controleer IPAdres en Poortnummer!\r\n");
+                    chkbStartStopServer.Checked = false;
                 }
             }
             else //server stoppen
@@ -150,7 +151,7 @@ namespace WinAppMediaPlayerVersie2
                     Writer.WriteLine("Disconnect");
                     bgWorkerOntvang.CancelAsync();
                 }
-                try //sever stoppen
+                try //server stoppen
                 {
                     if (listener != null)
                     {
@@ -159,12 +160,93 @@ namespace WinAppMediaPlayerVersie2
                     }
                     chkbStartStopServer.Text = "Start Server";
                     txtMelding.AppendText("Server gestopt!\r\n");
+                    tssTCPServer.Text = "TCP/IP sever gestopt";
+                    tssTCPServer.ForeColor = Color.Red;
+                    tssClient.ForeColor = Color.Red;
+                    tssClient.Text = "Client niet verbonden";
                 }
                 catch
                 {
                     txtMelding.AppendText("Server kan niet gestopt worden.\r\n");
                 }
             }
+        }
+
+        private void bgWorkerListener_DoWork(object sender, DoWorkEventArgs e)
+        {
+            client = listener.AcceptTcpClient();//1 client aanvaarden
+        }
+
+        private void bgWorkerListener_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            //listener stop met wachten als client verbonden is
+            //of als hij gestopt werd-> dan client niet starten
+            if (client != null && client.Connected)
+            {
+                //communicatie met client opzetten
+                Writer = new StreamWriter(client.GetStream());
+                Reader = new StreamReader(client.GetStream());
+                Writer.AutoFlush = true;
+                bgWorkerOntvang.WorkerSupportsCancellation = true;
+                bgWorkerOntvang.RunWorkerAsync();//start ontvangen data
+                btnVerbreek.Enabled = true;
+                txtMelding.AppendText("Client verbonden\r\n");
+                tssClient.Text = "Client verbonden";
+                tssClient.ForeColor = Color.Green;
+            }
+        }
+
+        private void bgWorkerOntvang_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (client.Connected)
+            {
+                string bericht;
+                try
+                {
+                    bericht = Reader.ReadLine();
+                    if (bericht == "Disconnect")
+                    {
+                        tssClient.ForeColor = Color.Red;
+                        tssClient.Text = "Client niet verbonden";
+                        break;                      
+                    }
+                    this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText(bericht + "\r\n"); }));
+                }
+                catch
+                {
+                    this.txtMelding.Invoke(new MethodInvoker(delegate () { txtMelding.AppendText("Kan bericht niet ontvangen.\r\n"); }));
+                }
+            }
+        }
+
+        private void bgWorkerOntvang_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Writer.Close();
+            Reader.Close();
+            client.Close();
+            txtMelding.AppendText("Verbinding met Client is verbroken.\r\n");
+            btnVerbreek.Enabled = false;
+            //bgWorker opnieuw opstarten als server nog gestart is
+            if (chkbStartStopServer.Checked) bgWorkerListener.RunWorkerAsync();
+        }
+
+        private void btnZend_Click(object sender, EventArgs e)
+        {
+            try 
+            {
+                Writer.WriteLine("SERVER >>>" + txtZend.Text);
+                txtOntvang.AppendText("SERVER >>>" + txtZend.Text + "\r\n");
+            }
+            catch 
+            {
+                txtMelding.AppendText("Berichten zenden mislukt!\r\n");
+            }
+        }
+
+        private void btnVerbreek_Click(object sender, EventArgs e)
+        {
+            Writer.WriteLine("Disconnect");
+            client.Close();
         }
 
         private void btnStartPlay_Click(object sender, EventArgs e)
