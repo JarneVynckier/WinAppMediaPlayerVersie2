@@ -13,7 +13,7 @@ using System.IO;
 using WMPLib;
 using System.Net.Sockets; //TCPClient en TCPServer verbinden
 using System.Net; //IPadressen gebruiken
-
+using System.Threading;
 
 namespace WinAppMediaPlayerVersie2
 {
@@ -149,6 +149,7 @@ namespace WinAppMediaPlayerVersie2
                 {
                     //eerst client stopbericht sturen
                     Writer.WriteLine("Disconnect");
+                    Thread.Sleep(20);
                     bgWorkerOntvang.CancelAsync();
                 }
                 try //server stoppen
@@ -193,6 +194,7 @@ namespace WinAppMediaPlayerVersie2
                 txtMelding.AppendText("Client verbonden\r\n");
                 tssClient.Text = "Client verbonden";
                 tssClient.ForeColor = Color.Green;
+                btnZend.Enabled = true;
             }
         }
 
@@ -208,9 +210,14 @@ namespace WinAppMediaPlayerVersie2
                     {
                         tssClient.ForeColor = Color.Red;
                         tssClient.Text = "Client niet verbonden";
-                        break;                      
+                        this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText("verbinding door client verbroken \r\n"); }));
+                                         
                     }
-                    this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText(bericht + "\r\n"); }));
+                    else
+                    {
+                        this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText(bericht + "\r\n"); }));
+                    }
+                    
                 }
                 catch
                 {
@@ -226,6 +233,7 @@ namespace WinAppMediaPlayerVersie2
             client.Close();
             txtMelding.AppendText("Verbinding met Client is verbroken.\r\n");
             btnVerbreek.Enabled = false;
+            btnZend.Enabled = true;
             //bgWorker opnieuw opstarten als server nog gestart is
             if (chkbStartStopServer.Checked) bgWorkerListener.RunWorkerAsync();
         }
@@ -246,6 +254,7 @@ namespace WinAppMediaPlayerVersie2
         private void btnVerbreek_Click(object sender, EventArgs e)
         {
             Writer.WriteLine("Disconnect");
+            Thread.Sleep(20);
             client.Close();
         }
 
