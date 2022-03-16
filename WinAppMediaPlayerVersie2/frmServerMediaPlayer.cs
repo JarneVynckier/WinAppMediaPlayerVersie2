@@ -43,10 +43,10 @@ namespace WinAppMediaPlayerVersie2
             foreach (string file in Directory.GetFiles(pad))
             {
                 // voeg toe aan resultaat
-                if(file.Contains(".mp3"))
+                if (file.Contains(".mp3"))
                 {
                     lstAlleSongs.Items.Add(Path.GetFileNameWithoutExtension(file));
-                }               
+                }
             }
             //afspeellijst aanmaken
             Player.currentPlaylist = Player.newPlaylist("Klas", "");
@@ -58,7 +58,7 @@ namespace WinAppMediaPlayerVersie2
             if (ofdZoekSong.ShowDialog() == DialogResult.OK)
             {
                 Pad = ofdZoekSong.FileName;
-                SongName= Path.GetFileNameWithoutExtension(ofdZoekSong.FileName);
+                SongName = Path.GetFileNameWithoutExtension(ofdZoekSong.FileName);
             }
             else { return; }
             if (lstAlleSongs.Items.Contains(SongName)) { MessageBox.Show("Deze song bestaat al!"); return; }
@@ -66,12 +66,12 @@ namespace WinAppMediaPlayerVersie2
             string pad = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "muziek");
             if (!Directory.Exists(pad))
             {
-                Directory.CreateDirectory(pad);                
+                Directory.CreateDirectory(pad);
             }
             //bestand kopiëren naar map muziek             
             File.Copy(Pad, pad + "\\" + SongName + ".mp3");
             //toevoegen aan lijst
-            lstAlleSongs.Items.Add( SongName );
+            lstAlleSongs.Items.Add(SongName);
         }
         WindowsMediaPlayer Player = new WindowsMediaPlayer();
 
@@ -98,7 +98,7 @@ namespace WinAppMediaPlayerVersie2
             //verwijderen uit Playlist
             IWMPMedia listItem = Player.currentPlaylist.get_Item(selectie);
             Player.currentPlaylist.removeItem(listItem);
-            if(lstPlaylistSongs.Items.Count==0)
+            if (lstPlaylistSongs.Items.Count == 0)
             {
                 tssMediaPlayer.Text = "Mediaplayer gestopt";
                 tssMediaPlayer.ForeColor = Color.Red;
@@ -136,6 +136,8 @@ namespace WinAppMediaPlayerVersie2
                     chkbStartStopServer.Text = "Stop Server";
                     tssTCPServer.Text = "TCP/IP sever gestart";
                     tssTCPServer.ForeColor = Color.Green;
+
+
                 }
                 catch (Exception)
                 {
@@ -176,6 +178,7 @@ namespace WinAppMediaPlayerVersie2
         private void bgWorkerListener_DoWork(object sender, DoWorkEventArgs e)
         {
             client = listener.AcceptTcpClient();//1 client aanvaarden
+
         }
 
         private void bgWorkerListener_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -195,6 +198,14 @@ namespace WinAppMediaPlayerVersie2
                 tssClient.Text = "Client verbonden";
                 tssClient.ForeColor = Color.Green;
                 btnZend.Enabled = true;
+                for (int i = 0; i < lstAlleSongs.Items.Count; i++)
+                {
+                    Writer.WriteLine("SONGLISTADD " + lstAlleSongs.Items[i]);
+                }
+                for (int i = 0; i < lstPlaylistSongs.Items.Count; i++)
+                {
+                    Writer.WriteLine("PLAYLISTADD " + lstPlaylistSongs.Items[i]);
+                }
             }
         }
 
@@ -208,16 +219,16 @@ namespace WinAppMediaPlayerVersie2
                     bericht = Reader.ReadLine();
                     if (bericht == "Disconnect")
                     {
-                        tssClient.ForeColor = Color.Red;
-                        tssClient.Text = "Client niet verbonden";
-                        this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText("verbinding door client verbroken \r\n"); }));
-                                         
+
+                        this.txtMelding.Invoke(new MethodInvoker(delegate () { txtMelding.AppendText("verbinding door client verbroken \r\n"); }));
+                        this.statusStrip1.Invoke(new MethodInvoker(delegate () { tssClient.Text = "Client niet verbonden"; }));
+                        this.statusStrip1.Invoke(new MethodInvoker(delegate () { tssClient.ForeColor = Color.Red; }));
                     }
                     else
                     {
                         this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText(bericht + "\r\n"); }));
                     }
-                    
+
                 }
                 catch
                 {
@@ -240,12 +251,12 @@ namespace WinAppMediaPlayerVersie2
 
         private void btnZend_Click(object sender, EventArgs e)
         {
-            try 
+            try
             {
                 Writer.WriteLine("SERVER >>>" + txtZend.Text);
                 txtOntvang.AppendText("SERVER >>>" + txtZend.Text + "\r\n");
             }
-            catch 
+            catch
             {
                 txtMelding.AppendText("Berichten zenden mislukt!\r\n");
             }
@@ -263,7 +274,7 @@ namespace WinAppMediaPlayerVersie2
             Player.controls.play();
             tssMediaPlayer.Text = "Mediaplayer speelt af";
             tssMediaPlayer.ForeColor = Color.Green;
-        }  
-        
+        }
+
     }
 }
