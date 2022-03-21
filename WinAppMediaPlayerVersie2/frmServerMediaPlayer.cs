@@ -224,6 +224,14 @@ namespace WinAppMediaPlayerVersie2
                         this.statusStrip1.Invoke(new MethodInvoker(delegate () { tssClient.Text = "Client niet verbonden"; }));
                         this.statusStrip1.Invoke(new MethodInvoker(delegate () { tssClient.ForeColor = Color.Red; }));
                     }
+                    else if (bericht == "start")
+                    {
+                        btnStartPlay_Click(sender, e);
+                    }
+                    else if (bericht == "stop") 
+                    {
+                        btnStopPlay_Click(sender, e);
+                    }
                     else
                     {
                         this.txtOntvang.Invoke(new MethodInvoker(delegate () { txtOntvang.AppendText(bericht + "\r\n"); }));
